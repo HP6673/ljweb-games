@@ -1,0 +1,2370 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4"><Item class="Workspace" referent="RBX1"><Properties><string name="Name">Workspace</string></Properties></Item><Item class="ReplicatedFirst" referent="RBX3"><Properties><string name="Name">ReplicatedFirst</string></Properties><Item class="LocalScript" referent="RBX2"><Properties><string name="Name">LoadingScreen</string><ProtectedString name="Source"><![CDATA[-- LoadingScreen (LocalScript, place in ReplicatedFirst and name it "LoadingScreen")
+local Players = game:GetService("Players")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+ReplicatedFirst:RemoveDefaultLoadingScreen()
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Paste your uploaded logo's asset ID here, e.g. "rbxassetid://123456789".
+-- Upload logo.png at create.roblox.com > Creator Hub > Decals/Images, then copy the Image ID.
+local LOGO_IMAGE = ""
+local Y0 = 0
+if LOGO_IMAGE ~= "" then
+	Y0 = 84
+end
+
+local ACCENT = Color3.fromRGB(94, 234, 212)
+local SUB = Color3.fromRGB(150, 160, 178)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "EndlessDrivingLoading"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 1000
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = playerGui
+
+local root = Instance.new("CanvasGroup")
+root.Size = UDim2.fromScale(1, 1)
+root.BackgroundColor3 = Color3.fromRGB(13, 16, 24)
+root.BorderSizePixel = 0
+root.Parent = gui
+
+local gradient = Instance.new("UIGradient")
+gradient.Rotation = 90
+gradient.Color = ColorSequence.new(Color3.fromRGB(20, 28, 44), Color3.fromRGB(9, 11, 17))
+gradient.Parent = root
+
+local center = Instance.new("Frame")
+center.AnchorPoint = Vector2.new(0.5, 0.5)
+center.Position = UDim2.fromScale(0.5, 0.5)
+center.Size = UDim2.fromOffset(420, 280 + Y0)
+center.BackgroundTransparency = 1
+center.Parent = root
+
+local scale = Instance.new("UIScale")
+scale.Parent = center
+local function updateScale()
+	local cam = workspace.CurrentCamera
+	if cam then
+		scale.Scale = math.clamp(math.min(cam.ViewportSize.X / 520, cam.ViewportSize.Y / 340), 0.6, 1.3)
+	end
+end
+updateScale()
+
+local function label(text, size, y, font, color, height)
+	local l = Instance.new("TextLabel")
+	l.BackgroundTransparency = 1
+	l.Size = UDim2.new(1, 0, 0, height or size + 6)
+	l.Position = UDim2.fromOffset(0, y)
+	l.Text = text
+	l.Font = font
+	l.TextSize = size
+	l.TextColor3 = color
+	l.Parent = center
+	return l
+end
+
+if LOGO_IMAGE ~= "" then
+	local logo = Instance.new("ImageLabel")
+	logo.AnchorPoint = Vector2.new(0.5, 0)
+	logo.Position = UDim2.new(0.5, 0, 0, 0)
+	logo.Size = UDim2.fromOffset(96, 72)
+	logo.BackgroundTransparency = 1
+	logo.Image = LOGO_IMAGE
+	logo.ScaleType = Enum.ScaleType.Fit
+	logo.Parent = center
+	local lc = Instance.new("UICorner")
+	lc.CornerRadius = UDim.new(0, 12)
+	lc.Parent = logo
+end
+
+label("ENDLESS DRIVING", 38, Y0, Enum.Font.GothamBlack, Color3.fromRGB(245, 248, 252), 46)
+label("THE ROAD NEVER ENDS", 12, Y0 + 48, Enum.Font.GothamBold, ACCENT, 18)
+
+-- Little animated car on a moving road
+local scene = Instance.new("Frame")
+scene.Size = UDim2.fromOffset(320, 84)
+scene.Position = UDim2.new(0.5, -160, 0, Y0 + 88)
+scene.BackgroundTransparency = 1
+scene.ClipsDescendants = true
+scene.Parent = center
+
+local road = Instance.new("Frame")
+road.Size = UDim2.new(1, 0, 0, 3)
+road.Position = UDim2.fromOffset(0, 70)
+road.BackgroundColor3 = Color3.fromRGB(60, 68, 86)
+road.BorderSizePixel = 0
+road.Parent = scene
+
+local dashes = {}
+for i = 1, 9 do
+	local d = Instance.new("Frame")
+	d.Size = UDim2.fromOffset(22, 3)
+	d.BackgroundColor3 = Color3.fromRGB(255, 208, 72)
+	d.BorderSizePixel = 0
+	d.Position = UDim2.fromOffset((i - 1) * 40, 78)
+	d.Parent = scene
+	dashes[i] = d
+end
+
+local car = Instance.new("Frame")
+car.Size = UDim2.fromOffset(92, 44)
+car.Position = UDim2.fromOffset(114, 24)
+car.BackgroundTransparency = 1
+car.Parent = scene
+
+local function box(parent, size, pos, color, radius)
+	local f = Instance.new("Frame")
+	f.Size = size
+	f.Position = pos
+	f.BackgroundColor3 = color
+	f.BorderSizePixel = 0
+	f.Parent = parent
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, radius)
+	c.Parent = f
+	return f
+end
+
+box(car, UDim2.fromOffset(46, 18), UDim2.fromOffset(18, 0), Color3.fromRGB(255, 200, 50), 7) -- cabin
+box(car, UDim2.fromOffset(32, 11), UDim2.fromOffset(25, 4), Color3.fromRGB(150, 205, 235), 4) -- window
+box(car, UDim2.fromOffset(92, 20), UDim2.fromOffset(0, 14), ACCENT, 8) -- body
+box(car, UDim2.fromOffset(6, 6), UDim2.fromOffset(84, 19), Color3.fromRGB(255, 244, 200), 3) -- headlight
+local wheelA = box(car, UDim2.fromOffset(18, 18), UDim2.fromOffset(10, 26), Color3.fromRGB(30, 31, 36), 9)
+local wheelB = box(car, UDim2.fromOffset(18, 18), UDim2.fromOffset(62, 26), Color3.fromRGB(30, 31, 36), 9)
+box(wheelA, UDim2.fromOffset(8, 8), UDim2.fromOffset(5, 5), Color3.fromRGB(208, 213, 224), 4)
+box(wheelB, UDim2.fromOffset(8, 8), UDim2.fromOffset(5, 5), Color3.fromRGB(208, 213, 224), 4)
+
+-- Progress bar
+local track = Instance.new("Frame")
+track.Size = UDim2.fromOffset(320, 6)
+track.Position = UDim2.new(0.5, -160, 0, Y0 + 198)
+track.BackgroundColor3 = Color3.fromRGB(40, 48, 64)
+track.BorderSizePixel = 0
+track.Parent = center
+local trackCorner = Instance.new("UICorner")
+trackCorner.CornerRadius = UDim.new(0, 3)
+trackCorner.Parent = track
+
+local fill = Instance.new("Frame")
+fill.Size = UDim2.fromScale(0, 1)
+fill.BackgroundColor3 = ACCENT
+fill.BorderSizePixel = 0
+fill.Parent = track
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(0, 3)
+fillCorner.Parent = fill
+
+local percent = label("0%", 12, Y0 + 210, Enum.Font.GothamBold, SUB, 16)
+
+local tips = {
+	"Drive miles to unlock new cars",
+	"Turn on Autodrive in Settings and enjoy the ride",
+	"Five cars to collect - each one faster than the last",
+	"Press T to toggle Autodrive",
+	"The road is generated as you drive, so it never ends",
+}
+local tipLabel = label(tips[1], 13, Y0 + 238, Enum.Font.GothamMedium, SUB, 18)
+
+task.spawn(function()
+	local i = 1
+	while gui.Parent do
+		task.wait(2.6)
+		if not gui.Parent then
+			break
+		end
+		i = i % #tips + 1
+		TweenService:Create(tipLabel, TweenInfo.new(0.25), { TextTransparency = 1 }):Play()
+		task.wait(0.25)
+		tipLabel.Text = tips[i]
+		TweenService:Create(tipLabel, TweenInfo.new(0.25), { TextTransparency = 0 }):Play()
+	end
+end)
+
+-- Progress logic: real milestones, eased, with a minimum display time
+local startTime = os.clock()
+local MIN_TIME = 3.5
+local MAX_TIME = 30
+local shown = 0
+local t = 0
+local finished = false
+local conn
+
+local function target()
+	local v = 0.08
+	if game:IsLoaded() then v = 0.4 end
+	if player:GetAttribute("EDClientReady") then v = 0.7 end
+	if player:GetAttribute("EDWorldReady") then v = 1 end
+	return v
+end
+
+local function finish()
+	if finished then
+		return
+	end
+	finished = true
+	conn:Disconnect()
+	local tw = TweenService:Create(root, TweenInfo.new(0.7, Enum.EasingStyle.Quad), { GroupTransparency = 1 })
+	tw:Play()
+	tw.Completed:Wait()
+	gui:Destroy()
+end
+
+conn = RunService.RenderStepped:Connect(function(dt)
+	t = t + dt
+	local elapsed = os.clock() - startTime
+	updateScale()
+
+	-- animation
+	for i, d in ipairs(dashes) do
+		local x = ((i - 1) * 40 - t * 190) % 360 - 30
+		d.Position = UDim2.fromOffset(x, 78)
+	end
+	car.Position = UDim2.fromOffset(114, 24 + math.sin(t * 14) * 1.2)
+
+	-- progress
+	local timeCap = 0.12 + math.clamp(elapsed / MIN_TIME, 0, 1) * 0.88
+	local goal = math.min(target(), timeCap)
+	shown = shown + (goal - shown) * math.min(1, dt * 3.5)
+	fill.Size = UDim2.fromScale(math.clamp(shown, 0, 1), 1)
+	percent.Text = math.floor(math.clamp(shown, 0, 1) * 100 + 0.5) .. "%"
+
+	if (shown > 0.985 and elapsed >= MIN_TIME and target() >= 1) or elapsed > MAX_TIME then
+		task.spawn(finish)
+	end
+end)
+]]></ProtectedString></Properties></Item></Item><Item class="ReplicatedStorage" referent="RBX6"><Properties><string name="Name">ReplicatedStorage</string></Properties><Item class="ModuleScript" referent="RBX4"><Properties><string name="Name">Config</string><ProtectedString name="Source"><![CDATA[-- Config (ModuleScript, place in ReplicatedStorage and name it "Config")
+local Config = {}
+
+Config.GameName = "Endless Driving"
+
+-- 1 stud is treated as 0.28 m
+Config.StudToMile = 0.28 / 1609.344
+Config.StudToMph = 0.28 * 2.236936
+Config.StudToKph = 0.28 * 3.6
+
+Config.World = {
+	RoadWidth = 36,
+	SegmentLength = 60,
+	SegmentsAhead = 16,
+	SegmentsBehind = 5,
+	MaxTurn = 0.11, -- max yaw change (radians) per road segment
+	ShiftDistance = 3000, -- floating-origin recenter distance
+	SlotSpacing = 6000, -- distance between players' private worlds
+}
+
+Config.Defaults = {
+	Music = true,
+	Volume = 0.5,
+	AutoDrive = false,
+	Units = "mph", -- "mph" or "kph"
+}
+
+-- Background music. Paste free-to-use audio asset IDs from the Creator Store
+-- (for example "rbxassetid://123456789"). Entries with an empty Id are skipped.
+Config.Music = {
+	{ Name = "Track 1", Id = "" },
+	{ Name = "Track 2", Id = "" },
+	{ Name = "Track 3", Id = "" },
+}
+
+-- Unlock = miles driven needed to unlock the car.
+Config.Cars = {
+	{
+		Id = "bug", Name = "Sunny Bug", Unlock = 0,
+		Color = Color3.fromRGB(255, 200, 50), Accent = Color3.fromRGB(255, 255, 255),
+		Length = 15, Width = 7.4, WheelRadius = 1.4, TireWidth = 1.4,
+		BodyHeight = 1.8, Headroom = 4.6, HoodFrac = 0.2, TrunkFrac = 0.12,
+		MaxSpeed = 100, Accel = 38, Turn = 2.2,
+	},
+	{
+		Id = "cruiser", Name = "Cruiser", Unlock = 3,
+		Color = Color3.fromRGB(46, 196, 182), Accent = Color3.fromRGB(30, 60, 80),
+		Length = 18, Width = 7.8, WheelRadius = 1.5, TireWidth = 1.5,
+		BodyHeight = 1.9, Headroom = 4.5, HoodFrac = 0.28, TrunkFrac = 0.22,
+		MaxSpeed = 130, Accel = 44, Turn = 2.0,
+	},
+	{
+		Id = "ox", Name = "Rally Ox", Unlock = 10,
+		Color = Color3.fromRGB(255, 122, 48), Accent = Color3.fromRGB(40, 40, 46),
+		Length = 19, Width = 8.4, WheelRadius = 1.95, TireWidth = 1.9,
+		BodyHeight = 2.0, Headroom = 4.6, HoodFrac = 0.26, TrunkFrac = 0.4,
+		Bed = true,
+		MaxSpeed = 160, Accel = 52, Turn = 1.9,
+	},
+	{
+		Id = "velocity", Name = "Velocity", Unlock = 25,
+		Color = Color3.fromRGB(235, 52, 72), Accent = Color3.fromRGB(250, 250, 252),
+		Length = 18.5, Width = 8.2, WheelRadius = 1.5, TireWidth = 1.9,
+		BodyHeight = 1.6, Headroom = 4.2, HoodFrac = 0.36, TrunkFrac = 0.2,
+		Stripe = true, Spoiler = true,
+		MaxSpeed = 200, Accel = 62, Turn = 1.85,
+	},
+	{
+		Id = "phantom", Name = "Phantom GT", Unlock = 60,
+		Color = Color3.fromRGB(118, 70, 255), Accent = Color3.fromRGB(80, 240, 255),
+		HubColor = Color3.fromRGB(80, 240, 255),
+		Length = 19.5, Width = 8.4, WheelRadius = 1.5, TireWidth = 2.0,
+		BodyHeight = 1.5, Headroom = 4.1, HoodFrac = 0.42, TrunkFrac = 0.16,
+		Stripe = true, Spoiler = true, Underglow = true,
+		MaxSpeed = 250, Accel = 74, Turn = 1.7,
+	},
+}
+
+Config.CarById = {}
+for _, car in ipairs(Config.Cars) do
+	Config.CarById[car.Id] = car
+end
+
+return Config
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX5"><Properties><string name="Name">CarBuilder</string><ProtectedString name="Source"><![CDATA[-- CarBuilder (ModuleScript, place in ReplicatedStorage and name it "CarBuilder")
+-- Builds a cartoon car model from parts. Ground level is y = 0, car faces -Z.
+local CarBuilder = {}
+
+local TIRE = Color3.fromRGB(30, 31, 36)
+local HUB = Color3.fromRGB(208, 213, 224)
+local DARK = Color3.fromRGB(44, 46, 54)
+local GLASS = Color3.fromRGB(150, 205, 235)
+
+local function newPart(parent, name, size, cf, color, shape)
+	local p = Instance.new("Part")
+	p.Name = name
+	if shape then
+		p.Shape = shape
+	end
+	p.Size = size
+	p.CFrame = cf
+	p.Color = color
+	p.Material = Enum.Material.SmoothPlastic
+	p.Anchored = false
+	p.CanCollide = false
+	p.CanQuery = false
+	p.CanTouch = false
+	p.Massless = true
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	p.Parent = parent
+	return p
+end
+
+local function weld(a, b, name, parent)
+	local w = Instance.new("Weld")
+	w.Name = name or "Weld"
+	w.Part0 = a
+	w.Part1 = b
+	w.C0 = a.CFrame:ToObjectSpace(b.CFrame)
+	w.Parent = parent or b
+	return w
+end
+
+function CarBuilder.Build(def)
+	local model = Instance.new("Model")
+	model.Name = def.Name
+
+	local W, L, R = def.Width, def.Length, def.WheelRadius
+	local tw = def.TireWidth or 1.5
+	local bodyBottom = R * 0.62
+	local bodyH = def.BodyHeight
+	local bodyTop = bodyBottom + bodyH
+	local seatTop = bodyTop - 0.7
+	local cabinTop = seatTop + def.Headroom
+	local roofT = 0.45
+	local hoodLen = L * def.HoodFrac
+	local trunkLen = L * def.TrunkFrac
+	local cabinFront = -L / 2 + hoodLen
+	local cabinBack = L / 2 - trunkLen
+	local cabinLen = cabinBack - cabinFront
+	local cabinMid = (cabinFront + cabinBack) / 2
+	local glassH = cabinTop - roofT - bodyTop
+
+	-- Invisible collision hull (the only part that collides). Root of the assembly.
+	local hullH = bodyBottom + 0.7
+	local hull = newPart(model, "Hull", Vector3.new(W - 1.6, hullH, L - 1.5), CFrame.new(0, hullH / 2, 0), def.Color)
+	hull.Transparency = 1
+	hull.CanCollide = true
+	hull.Massless = false
+	hull.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0, 0, 100, 1)
+	model.PrimaryPart = hull
+	hull.PivotOffset = CFrame.new(0, -hullH / 2, 0)
+
+	local function add(name, size, cf, color, shape)
+		local p = newPart(model, name, size, cf, color, shape)
+		weld(hull, p)
+		return p
+	end
+
+	-- Main body
+	add("Body", Vector3.new(W, bodyH, L), CFrame.new(0, bodyBottom + bodyH / 2, 0), def.Color)
+
+	-- Cabin: glass, pillars, roof
+	local glass = add("Glass", Vector3.new(W - 1.1, glassH, cabinLen), CFrame.new(0, bodyTop + glassH / 2, cabinMid), GLASS)
+	glass.Transparency = 0.55
+	local pillarColor = def.Accent
+	local px = (W - 1.1) / 2 - 0.1
+	for _, sx in ipairs({ -1, 1 }) do
+		add("PillarF", Vector3.new(0.5, glassH, 0.5), CFrame.new(sx * px, bodyTop + glassH / 2, cabinFront + 0.2), pillarColor)
+		add("PillarB", Vector3.new(0.5, glassH, 0.5), CFrame.new(sx * px, bodyTop + glassH / 2, cabinBack - 0.2), pillarColor)
+	end
+	add("Roof", Vector3.new(W - 0.5, roofT, cabinLen + 0.6), CFrame.new(0, cabinTop - roofT / 2, cabinMid), def.Color)
+
+	-- Bumpers and grille
+	add("BumperF", Vector3.new(W + 0.3, 0.8, 0.9), CFrame.new(0, bodyBottom + 0.5, -L / 2 - 0.35), DARK)
+	add("BumperR", Vector3.new(W + 0.3, 0.8, 0.9), CFrame.new(0, bodyBottom + 0.5, L / 2 + 0.35), DARK)
+	add("Grille", Vector3.new(W * 0.45, 0.8, 0.25), CFrame.new(0, bodyBottom + 1.15, -L / 2 - 0.1), Color3.fromRGB(35, 36, 42))
+
+	-- Lights
+	for _, sx in ipairs({ -1, 1 }) do
+		local hx = sx * (W / 2 - 1.3)
+		local head = add("Headlight", Vector3.new(0.3, 1.3, 1.3), CFrame.new(hx, bodyTop - 0.7, -L / 2 - 0.05) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(255, 244, 200), Enum.PartType.Cylinder)
+		head.Material = Enum.Material.Neon
+		local tail = add("Taillight", Vector3.new(1.7, 0.7, 0.3), CFrame.new(sx * (W / 2 - 1.2), bodyTop - 0.7, L / 2 + 0.05), Color3.fromRGB(255, 60, 70))
+		tail.Material = Enum.Material.Neon
+	end
+
+	-- Wheels (front wheels can steer, all wheels can spin: client edits the Weld C0)
+	local axleZ = L * 0.31
+	local wx = W / 2 - tw / 2 + 0.55
+	local spots = { { "FL", -wx, -axleZ }, { "FR", wx, -axleZ }, { "RL", -wx, axleZ }, { "RR", wx, axleZ } }
+	local fenderY = math.max(R * 2 + 0.25, bodyTop + 0.2)
+	for _, spot in ipairs(spots) do
+		local label, x, z = spot[1], spot[2], spot[3]
+		local cf = CFrame.new(x, R, z)
+		local tire = newPart(model, "Tire" .. label, Vector3.new(tw, R * 2, R * 2), cf, TIRE, Enum.PartType.Cylinder)
+		weld(hull, tire, "Wheel" .. label, hull)
+		local hub = newPart(model, "Hub" .. label, Vector3.new(tw + 0.1, R * 1.1, R * 1.1), cf, def.HubColor or HUB, Enum.PartType.Cylinder)
+		weld(tire, hub)
+		add("Fender" .. label, Vector3.new(tw + 0.4, 0.35, R * 2 + 1.0), CFrame.new(x, fenderY, z), def.Color)
+	end
+
+	-- Pickup bed
+	if def.Bed then
+		local bedZ = cabinBack + trunkLen / 2
+		add("BedLiner", Vector3.new(W - 1.2, 0.08, trunkLen - 1), CFrame.new(0, bodyTop + 0.05, bedZ), DARK)
+		for _, sx in ipairs({ -1, 1 }) do
+			add("BedWall", Vector3.new(0.45, 1.5, trunkLen - 0.2), CFrame.new(sx * (W / 2 - 0.25), bodyTop + 0.75, bedZ), def.Color)
+		end
+		add("BedBack", Vector3.new(W, 1.5, 0.45), CFrame.new(0, bodyTop + 0.75, L / 2 - 0.22), def.Color)
+	end
+
+	-- Racing stripe
+	if def.Stripe then
+		add("StripeHood", Vector3.new(1.6, 0.06, hoodLen), CFrame.new(0, bodyTop + 0.03, -L / 2 + hoodLen / 2), def.Accent)
+		add("StripeTrunk", Vector3.new(1.6, 0.06, trunkLen), CFrame.new(0, bodyTop + 0.03, L / 2 - trunkLen / 2), def.Accent)
+	end
+
+	-- Spoiler
+	if def.Spoiler then
+		local sz = L / 2 - 1.0
+		add("Wing", Vector3.new(W - 1.2, 0.3, 1.6), CFrame.new(0, bodyTop + 1.7, sz), def.Accent)
+		for _, sx in ipairs({ -1, 1 }) do
+			add("WingPost", Vector3.new(0.4, 1.6, 0.6), CFrame.new(sx * (W / 2 - 1.6), bodyTop + 0.8, sz), DARK)
+		end
+	end
+
+	-- Neon underglow
+	if def.Underglow then
+		for _, sx in ipairs({ -1, 1 }) do
+			local strip = add("Underglow", Vector3.new(0.3, 0.12, L - 4), CFrame.new(sx * (W / 2 - 0.2), bodyBottom - 0.1, 0), def.Accent)
+			strip.Material = Enum.Material.Neon
+		end
+		local light = Instance.new("PointLight")
+		light.Color = def.Accent
+		light.Range = 16
+		light.Brightness = 2
+		light.Parent = hull
+	end
+
+	-- Driver seat (VehicleSeat gives us WASD / thumbstick / gamepad input for free)
+	local seat = Instance.new("VehicleSeat")
+	seat.Name = "DriverSeat"
+	seat.Size = Vector3.new(2.2, 1, 2.4)
+	seat.CFrame = CFrame.new(-W * 0.2, seatTop - 0.5, cabinFront + 2.6)
+	seat.Color = Color3.fromRGB(40, 42, 50)
+	seat.Material = Enum.Material.SmoothPlastic
+	seat.Anchored = false
+	seat.CanCollide = false
+	seat.Massless = true
+	seat.HeadsUpDisplay = false
+	seat.MaxSpeed = 0
+	seat.Parent = model
+	weld(hull, seat)
+
+	model:SetAttribute("CarId", def.Id)
+	model:SetAttribute("WheelRadius", R)
+	return model
+end
+
+return CarBuilder
+]]></ProtectedString></Properties></Item></Item><Item class="ServerScriptService" referent="RBX8"><Properties><string name="Name">ServerScriptService</string></Properties><Item class="Script" referent="RBX7"><Properties><string name="Name">Server</string><ProtectedString name="Source"><![CDATA[-- Server (Script, place in ServerScriptService and name it "Server")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
+local Workspace = game:GetService("Workspace")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local CarBuilder = require(ReplicatedStorage:WaitForChild("CarBuilder"))
+
+local store = DataStoreService:GetDataStore("EndlessDriving_v1")
+
+---------------------------------------------------------------- remotes
+local remotes = Instance.new("Folder")
+remotes.Name = "EndlessDrivingRemotes"
+remotes.Parent = ReplicatedStorage
+
+local function newRemote(name)
+	local r = Instance.new("RemoteEvent")
+	r.Name = name
+	r.Parent = remotes
+	return r
+end
+
+local ReadyRemote = newRemote("Ready")
+local WorldBuiltRemote = newRemote("WorldBuilt")
+local SelectCarRemote = newRemote("SelectCar")
+local DistanceRemote = newRemote("Distance")
+local SettingsRemote = newRemote("Settings")
+local StatsRemote = newRemote("Stats")
+
+---------------------------------------------------------------- lobby
+-- Players spawn on a hidden platform high in the sky while their client loads,
+-- then get seated in their car.
+for _, name in ipairs({ "Baseplate", "SpawnLocation" }) do
+	local old = Workspace:FindFirstChild(name)
+	if old then
+		old:Destroy()
+	end
+end
+
+local lobby = Instance.new("SpawnLocation")
+lobby.Name = "LobbySpawn"
+lobby.Anchored = true
+lobby.Size = Vector3.new(24, 1, 24)
+lobby.Position = Vector3.new(0, 3000, 0)
+lobby.Transparency = 1
+lobby.Neutral = true
+lobby.Duration = 0
+lobby.Parent = Workspace
+
+Players.RespawnTime = 1
+
+---------------------------------------------------------------- data
+local function defaultData()
+	return { miles = 0, selected = Config.Cars[1].Id, settings = table.clone(Config.Defaults) }
+end
+
+local function sanitize(raw)
+	local d = defaultData()
+	if type(raw) ~= "table" then
+		return d
+	end
+	if type(raw.miles) == "number" and raw.miles == raw.miles and raw.miles >= 0 and raw.miles < 1e9 then
+		d.miles = raw.miles
+	end
+	if type(raw.selected) == "string" and Config.CarById[raw.selected] then
+		d.selected = raw.selected
+	end
+	if type(raw.settings) == "table" then
+		local s = raw.settings
+		if type(s.Music) == "boolean" then d.settings.Music = s.Music end
+		if type(s.AutoDrive) == "boolean" then d.settings.AutoDrive = s.AutoDrive end
+		if type(s.Volume) == "number" and s.Volume == s.Volume then d.settings.Volume = math.clamp(s.Volume, 0, 1) end
+		if s.Units == "mph" or s.Units == "kph" then d.settings.Units = s.Units end
+	end
+	if d.miles < Config.CarById[d.selected].Unlock then
+		d.selected = Config.Cars[1].Id
+	end
+	return d
+end
+
+local function loadData(player)
+	local key = "player_" .. player.UserId
+	for _ = 1, 3 do
+		local ok, result = pcall(function()
+			return store:GetAsync(key)
+		end)
+		if ok then
+			return sanitize(result), true
+		end
+		task.wait(1)
+	end
+	warn("[EndlessDriving] Could not load data for " .. player.Name .. " (progress will not be saved this session).")
+	return defaultData(), false
+end
+
+local function saveData(player, st)
+	if not st or not st.canSave then
+		return
+	end
+	local key = "player_" .. player.UserId
+	local ok, err = pcall(function()
+		store:SetAsync(key, st.data)
+	end)
+	if not ok then
+		warn("[EndlessDriving] Save failed: " .. tostring(err))
+	end
+end
+
+---------------------------------------------------------------- state
+local states = {}
+local usedSlots = {}
+
+local function claimSlot()
+	for i = 0, 200 do
+		if not usedSlots[i] then
+			usedSlots[i] = true
+			return i
+		end
+	end
+	return 0
+end
+
+local function slotOrigin(slot)
+	return Vector3.new(slot * Config.World.SlotSpacing, 0, 0)
+end
+
+local function sendStats(player)
+	local st = states[player]
+	if not st then
+		return
+	end
+	StatsRemote:FireClient(player, {
+		Miles = st.data.miles,
+		Selected = st.data.selected,
+		Settings = st.data.settings,
+	})
+end
+
+---------------------------------------------------------------- cars
+local function seatPlayer(player)
+	local st = states[player]
+	local char = player.Character
+	if not (st and st.car and st.car.Parent and char) then
+		return
+	end
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local seat = st.car:FindFirstChildWhichIsA("VehicleSeat")
+	if not humanoid or not seat or humanoid.Health <= 0 then
+		return
+	end
+	if humanoid.SeatPart == seat then
+		return
+	end
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+	char:PivotTo(seat.CFrame * CFrame.new(0, 3, 0))
+	task.wait()
+	if seat.Parent and humanoid.Parent then
+		pcall(function()
+			seat:Sit(humanoid)
+		end)
+	end
+end
+
+local function releaseCar(player, car)
+	local st = states[player]
+	if not st or st.car ~= car or not car.Parent then
+		return
+	end
+	local hull = car.PrimaryPart
+	if not hull then
+		return
+	end
+	hull.Anchored = false
+	pcall(function()
+		hull:SetNetworkOwner(player)
+	end)
+end
+
+local function spawnCar(player, cf)
+	local st = states[player]
+	if not st then
+		return
+	end
+	st.swapping = true
+	if st.car then
+		st.car:Destroy()
+		st.car = nil
+	end
+	local def = Config.CarById[st.data.selected]
+	local car = CarBuilder.Build(def)
+	car.Name = "Car_" .. player.UserId
+	car:PivotTo(cf)
+	car.PrimaryPart.Anchored = true -- held until the client has built its world
+	car.Parent = Workspace
+	st.car = car
+	seatPlayer(player)
+	st.swapping = false
+	if st.worldBuilt then
+		task.delay(0.4, function()
+			releaseCar(player, car)
+		end)
+	end
+end
+
+local function onCharacterAdded(player, char)
+	local st = states[player]
+	if not st then
+		return
+	end
+	local humanoid = char:WaitForChild("Humanoid", 10)
+	if not humanoid then
+		return
+	end
+	humanoid.Seated:Connect(function(active)
+		if active then
+			return
+		end
+		task.delay(0.4, function()
+			if states[player] == st and st.car and st.car.Parent and not st.swapping
+				and humanoid.Parent and humanoid.Health > 0 and humanoid.SeatPart == nil then
+				seatPlayer(player)
+			end
+		end)
+	end)
+	if st.ready then
+		if st.car and st.car.Parent then
+			task.wait(0.2)
+			seatPlayer(player)
+		else
+			spawnCar(player, CFrame.new(slotOrigin(st.slot) + Vector3.new(0, 0.5, 0)))
+		end
+	end
+end
+
+---------------------------------------------------------------- players
+local function onPlayerAdded(player)
+	local st = { slot = claimSlot(), ready = false, loaded = false, worldBuilt = false, lastTotal = 0, lastReport = os.clock() }
+	states[player] = st
+	player.CharacterAdded:Connect(function(char)
+		onCharacterAdded(player, char)
+	end)
+	st.data, st.canSave = loadData(player)
+	st.loaded = true
+	if player.Character then
+		task.spawn(onCharacterAdded, player, player.Character)
+	end
+end
+
+local function onPlayerRemoving(player)
+	local st = states[player]
+	if not st then
+		return
+	end
+	saveData(player, st)
+	if st.car then
+		st.car:Destroy()
+	end
+	usedSlots[st.slot] = nil
+	states[player] = nil
+end
+
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(onPlayerRemoving)
+for _, p in ipairs(Players:GetPlayers()) do
+	task.spawn(onPlayerAdded, p)
+end
+
+---------------------------------------------------------------- remote handlers
+ReadyRemote.OnServerEvent:Connect(function(player)
+	local st = states[player]
+	if not st or st.ready then
+		return
+	end
+	while not st.loaded and player.Parent do
+		task.wait(0.1)
+	end
+	if not player.Parent then
+		return
+	end
+	st.ready = true
+	st.lastReport = os.clock()
+	sendStats(player)
+	spawnCar(player, CFrame.new(slotOrigin(st.slot) + Vector3.new(0, 0.5, 0)))
+	-- Safety net: never leave the car frozen if the client never answers.
+	local car = st.car
+	task.delay(25, function()
+		if states[player] == st and not st.worldBuilt then
+			st.worldBuilt = true
+			releaseCar(player, car)
+		end
+	end)
+end)
+
+WorldBuiltRemote.OnServerEvent:Connect(function(player)
+	local st = states[player]
+	if not st or st.worldBuilt then
+		return
+	end
+	st.worldBuilt = true
+	releaseCar(player, st.car)
+end)
+
+SelectCarRemote.OnServerEvent:Connect(function(player, id, cf)
+	local st = states[player]
+	if not st or not st.ready or st.swapping or type(id) ~= "string" then
+		return
+	end
+	local def = Config.CarById[id]
+	if not def or st.data.selected == id or st.data.miles < def.Unlock then
+		return
+	end
+	local now = os.clock()
+	if now - (st.lastSwap or 0) < 1 then
+		return
+	end
+	st.lastSwap = now
+
+	local pos, look
+	if typeof(cf) == "CFrame" and cf.Position.Magnitude < 1e6 and cf.Position == cf.Position then
+		pos, look = cf.Position, cf.LookVector
+	elseif st.car and st.car.PrimaryPart then
+		pos, look = st.car.PrimaryPart.Position, st.car.PrimaryPart.CFrame.LookVector
+	else
+		pos, look = slotOrigin(st.slot), Vector3.new(0, 0, -1)
+	end
+	local yaw = math.atan2(-look.X, -look.Z)
+	st.data.selected = id
+	spawnCar(player, CFrame.new(pos.X, 0.5, pos.Z) * CFrame.Angles(0, yaw, 0))
+	sendStats(player)
+end)
+
+DistanceRemote.OnServerEvent:Connect(function(player, total)
+	local st = states[player]
+	if not st or not st.ready or type(total) ~= "number" or total ~= total or total == math.huge then
+		return
+	end
+	local now = os.clock()
+	local elapsed = now - st.lastReport
+	if elapsed < 0.4 then
+		return
+	end
+	elapsed = math.min(elapsed, 10)
+	st.lastReport = now
+	local delta = total - st.lastTotal
+	st.lastTotal = math.max(total, st.lastTotal)
+	if delta > 0 then
+		local def = Config.CarById[st.data.selected]
+		local allowed = elapsed * def.MaxSpeed * 1.4 + 20 -- anti-cheat: cap by what the car can do
+		delta = math.min(delta, allowed)
+		st.data.miles = st.data.miles + delta * Config.StudToMile
+	end
+	sendStats(player)
+end)
+
+SettingsRemote.OnServerEvent:Connect(function(player, s)
+	local st = states[player]
+	if not st or type(s) ~= "table" then
+		return
+	end
+	local out = st.data.settings
+	if type(s.Music) == "boolean" then out.Music = s.Music end
+	if type(s.AutoDrive) == "boolean" then out.AutoDrive = s.AutoDrive end
+	if type(s.Volume) == "number" and s.Volume == s.Volume then out.Volume = math.clamp(s.Volume, 0, 1) end
+	if s.Units == "mph" or s.Units == "kph" then out.Units = s.Units end
+end)
+
+---------------------------------------------------------------- saving
+task.spawn(function()
+	while true do
+		task.wait(60)
+		for player, st in pairs(states) do
+			task.spawn(saveData, player, st)
+		end
+	end
+end)
+
+game:BindToClose(function()
+	for player, st in pairs(states) do
+		task.spawn(saveData, player, st)
+	end
+	task.wait(2)
+end)
+]]></ProtectedString></Properties></Item></Item><Item class="StarterPlayer" referent="RBX13"><Properties><string name="Name">StarterPlayer</string></Properties><Item class="StarterPlayerScripts" referent="RBX12"><Properties><string name="Name">StarterPlayerScripts</string></Properties><Item class="LocalScript" referent="RBX9"><Properties><string name="Name">Client</string><ProtectedString name="Source"><![CDATA[-- Client (LocalScript, place in StarterPlayerScripts and name it "Client")
+-- Driving physics, autodrive, music, lighting, and glue between UI / world / server.
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+local StarterGui = game:GetService("StarterGui")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local World = require(script.Parent:WaitForChild("World"))
+local UI = require(script.Parent:WaitForChild("UI"))
+
+local remotes = ReplicatedStorage:WaitForChild("EndlessDrivingRemotes")
+local ReadyRemote = remotes:WaitForChild("Ready")
+local WorldBuiltRemote = remotes:WaitForChild("WorldBuilt")
+local SelectCarRemote = remotes:WaitForChild("SelectCar")
+local DistanceRemote = remotes:WaitForChild("Distance")
+local SettingsRemote = remotes:WaitForChild("Settings")
+local StatsRemote = remotes:WaitForChild("Stats")
+
+---------------------------------------------------------------- tuning
+local BRAKE = 120 -- studs/s^2 when braking
+local COAST = 14 -- studs/s^2 engine drag with no throttle
+
+---------------------------------------------------------------- state
+local settings = table.clone(Config.Defaults)
+local settingsLoaded = false
+local serverMiles = 0
+local totalStuds = 0
+local studsAtSync = 0
+local car = nil
+local world = nil
+local originPos = Vector3.new(0, 0, 0)
+local autoSteer = 0
+local fov = 70
+
+---------------------------------------------------------------- setup: core gui, camera, lighting
+task.spawn(function()
+	for _ = 1, 10 do
+		local ok = pcall(function()
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
+		end)
+		if ok then
+			break
+		end
+		task.wait(0.5)
+	end
+end)
+
+player.CameraMinZoomDistance = 20
+player.CameraMaxZoomDistance = 50
+
+local function setupLighting()
+	Lighting.ClockTime = 16.2
+	Lighting.Brightness = 2.4
+	Lighting.Ambient = Color3.fromRGB(96, 104, 124)
+	Lighting.OutdoorAmbient = Color3.fromRGB(126, 134, 158)
+	Lighting.EnvironmentDiffuseScale = 0.6
+	Lighting.EnvironmentSpecularScale = 0.4
+	Lighting.GlobalShadows = true
+
+	local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere")
+	atmosphere.Density = 0.28
+	atmosphere.Offset = 0.2
+	atmosphere.Color = Color3.fromRGB(199, 214, 240)
+	atmosphere.Decay = Color3.fromRGB(240, 190, 150)
+	atmosphere.Glare = 0.4
+	atmosphere.Haze = 1.6
+	atmosphere.Parent = Lighting
+
+	if not Lighting:FindFirstChildOfClass("Sky") then
+		local sky = Instance.new("Sky")
+		sky.Parent = Lighting
+	end
+
+	local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect") or Instance.new("ColorCorrectionEffect")
+	cc.Saturation = 0.18
+	cc.Contrast = 0.08
+	cc.TintColor = Color3.fromRGB(255, 248, 240)
+	cc.Parent = Lighting
+
+	local bloom = Lighting:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect")
+	bloom.Intensity = 0.25
+	bloom.Size = 24
+	bloom.Threshold = 1
+	bloom.Parent = Lighting
+
+	local rays = Lighting:FindFirstChildOfClass("SunRaysEffect") or Instance.new("SunRaysEffect")
+	rays.Intensity = 0.08
+	rays.Spread = 0.6
+	rays.Parent = Lighting
+end
+setupLighting()
+
+---------------------------------------------------------------- music
+local tracks = {}
+for _, t in ipairs(Config.Music) do
+	if type(t.Id) == "string" and t.Id ~= "" then
+		table.insert(tracks, t)
+	end
+end
+
+local music = Instance.new("Sound")
+music.Name = "EndlessDrivingMusic"
+music.Looped = false
+music.Volume = settings.Volume
+music.Parent = SoundService
+local trackIndex = 0
+local ui
+
+local function playNext()
+	if #tracks == 0 then
+		return
+	end
+	trackIndex = trackIndex % #tracks + 1
+	music.SoundId = tracks[trackIndex].Id
+	music:Play()
+	if ui then
+		ui:SetMusicInfo("Now playing: " .. tracks[trackIndex].Name)
+	end
+end
+
+music.Ended:Connect(function()
+	if settings.Music then
+		playNext()
+	end
+end)
+
+local function applyMusic()
+	music.Volume = settings.Volume
+	if #tracks == 0 then
+		if ui then
+			ui:SetMusicInfo("No tracks yet - add audio IDs to Config.Music to enable background music.")
+		end
+		return
+	end
+	if settings.Music then
+		if music.IsPaused then
+			music:Resume()
+		elseif not music.IsPlaying then
+			playNext()
+		end
+	else
+		music:Pause()
+		if ui then
+			ui:SetMusicInfo("Music is off")
+		end
+	end
+end
+
+---------------------------------------------------------------- settings sync
+local saveToken = 0
+local function scheduleSave()
+	saveToken = saveToken + 1
+	local token = saveToken
+	task.delay(1, function()
+		if token == saveToken then
+			SettingsRemote:FireServer(settings)
+		end
+	end)
+end
+
+---------------------------------------------------------------- UI
+ui = UI.new({
+	SelectCar = function(id)
+		local cf = nil
+		if car and car.hull.Parent then
+			cf = car.hull.CFrame
+		end
+		SelectCarRemote:FireServer(id, cf)
+		ui.carsModal.close()
+	end,
+	SettingChanged = function(_, _, all)
+		settings = table.clone(all)
+		applyMusic()
+		scheduleSave()
+	end,
+})
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then
+		return
+	end
+	if input.KeyCode == Enum.KeyCode.T then
+		ui:_setSetting("AutoDrive", not settings.AutoDrive)
+	end
+end)
+
+StatsRemote.OnClientEvent:Connect(function(p)
+	serverMiles = p.Miles
+	studsAtSync = totalStuds
+	if p.Settings and not settingsLoaded then
+		settingsLoaded = true
+		settings = table.clone(p.Settings)
+		ui:SetSettings(settings)
+		applyMusic()
+	end
+	ui:SetStats(p.Miles, p.Selected)
+end)
+
+---------------------------------------------------------------- car binding
+local function findCar()
+	local char = player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	local seat = hum and hum.SeatPart
+	if seat and seat:IsA("VehicleSeat") then
+		local model = seat.Parent
+		if model and model:IsA("Model") and model:GetAttribute("CarId") then
+			return model, seat
+		end
+	end
+	return nil, nil
+end
+
+local function bindCar(model, seat)
+	local def = Config.CarById[model:GetAttribute("CarId")]
+	local hull = model.PrimaryPart
+	if not def or not hull then
+		return
+	end
+	local c = { model = model, seat = seat, hull = hull, def = def, wheels = {}, spin = 0, steer = 0, speed = 0 }
+	for _, name in ipairs({ "FL", "FR", "RL", "RR" }) do
+		local w = hull:FindFirstChild("Wheel" .. name)
+		if w then
+			c.wheels[name] = { weld = w, base = w.C0 }
+		end
+	end
+	car = c
+
+	if not world then
+		local p = hull.Position
+		local look = hull.CFrame.LookVector
+		originPos = Vector3.new(p.X, 0, p.Z)
+		world = World.new()
+		world:Init(originPos, math.atan2(-look.X, -look.Z))
+		player:SetAttribute("EDWorldReady", true)
+		WorldBuiltRemote:FireServer()
+	end
+end
+
+---------------------------------------------------------------- driving
+local function approach(v, target, delta)
+	if v < target then
+		return math.min(v + delta, target)
+	end
+	return math.max(v - delta, target)
+end
+
+local function stepCar(dt)
+	local hull, seat, def = car.hull, car.seat, car.def
+	if not hull.Parent or hull.Anchored or not world then
+		return
+	end
+	local cf = hull.CFrame
+	local look = cf.LookVector
+	local flat = Vector3.new(look.X, 0, look.Z)
+	if flat.Magnitude < 0.05 then
+		return
+	end
+	flat = flat.Unit
+
+	-- floating origin: keep coordinates small so physics stays precise forever
+	local p = hull.Position
+	local ox, oz = p.X - originPos.X, p.Z - originPos.Z
+	if ox * ox + oz * oz > Config.World.ShiftDistance * Config.World.ShiftDistance then
+		local offset = Vector3.new(ox, 0, oz)
+		local v, w = hull.AssemblyLinearVelocity, hull.AssemblyAngularVelocity
+		world:Shift(offset)
+		car.model:PivotTo(car.model:GetPivot() - offset)
+		hull.AssemblyLinearVelocity = v
+		hull.AssemblyAngularVelocity = w
+		cf = hull.CFrame
+		p = hull.Position
+	end
+
+	-- recover from flips or falling out of the world
+	if cf.UpVector.Y < 0.35 or p.Y < -60 then
+		local yaw = math.atan2(-look.X, -look.Z)
+		car.model:PivotTo(CFrame.new(p.X, 0.5, p.Z) * CFrame.Angles(0, yaw, 0))
+		hull.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+		hull.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+		return
+	end
+
+	world:Update(p)
+
+	local vel = hull.AssemblyLinearVelocity
+	local speed = vel:Dot(flat)
+	local maxS = def.MaxSpeed
+
+	-- inputs (VehicleSeat gives WASD / thumbstick / gamepad)
+	local throttle = seat.ThrottleFloat
+	local steer = seat.SteerFloat
+	if settings.AutoDrive then
+		local lookahead = math.clamp(math.abs(speed) * 0.7 + 30, 40, 150)
+		local target = world:GetTarget(p, lookahead)
+		if target then
+			local lp = cf:PointToObjectSpace(target)
+			autoSteer = math.clamp(math.atan2(lp.X, -lp.Z) * 2.2, -1, 1)
+		end
+		if math.abs(throttle) < 0.05 then
+			throttle = 1 -- pressing S still brakes
+		end
+		if math.abs(steer) < 0.1 then
+			steer = autoSteer
+		end
+	end
+
+	-- speed
+	if throttle > 0.05 then
+		local top = maxS * throttle
+		if speed < 0 then
+			speed = approach(speed, 0, BRAKE * dt)
+		elseif speed < top then
+			local f = 1 - 0.75 * (speed / maxS) ^ 2
+			speed = math.min(speed + def.Accel * f * dt, top)
+		else
+			speed = approach(speed, top, COAST * 2 * dt)
+		end
+	elseif throttle < -0.05 then
+		if speed > 1 then
+			speed = approach(speed, 0, BRAKE * dt)
+		else
+			speed = math.max(speed - def.Accel * 0.6 * dt, -maxS * 0.3)
+		end
+	else
+		speed = approach(speed, 0, (COAST + math.abs(speed) * 0.05) * dt)
+	end
+
+	-- steering
+	car.steer = car.steer + (steer - car.steer) * math.min(1, dt * 9)
+	local speedFrac = math.clamp(math.abs(speed) / maxS, 0, 1)
+	local grip = math.clamp(speed / 18, -1, 1)
+	local yawRate = -car.steer * def.Turn * grip * (1 - 0.5 * speedFrac)
+
+	hull.AssemblyLinearVelocity = flat * speed + Vector3.new(0, vel.Y, 0)
+	hull.AssemblyAngularVelocity = Vector3.new(0, yawRate, 0)
+
+	car.speed = speed
+	totalStuds = totalStuds + math.abs(speed) * dt
+end
+
+RunService.Stepped:Connect(function(_, dt)
+	local model, seat = findCar()
+	if model then
+		if not car or car.model ~= model then
+			bindCar(model, seat)
+		end
+	else
+		car = nil
+	end
+	if car then
+		stepCar(dt)
+	end
+end)
+
+---------------------------------------------------------------- visuals (wheels, HUD, FOV)
+RunService:BindToRenderStep("EndlessDrivingVisuals", Enum.RenderPriority.Camera.Value + 1, function(dt)
+	local cam = Workspace.CurrentCamera
+	if not car or not car.hull.Parent then
+		ui:SetSpeed(0, 100)
+		ui:SetMiles(serverMiles + (totalStuds - studsAtSync) * Config.StudToMile)
+		if cam then
+			fov = fov + (70 - fov) * math.min(1, dt * 4)
+			cam.FieldOfView = fov
+		end
+		return
+	end
+
+	local radius = car.model:GetAttribute("WheelRadius") or 1.5
+	car.spin = car.spin - car.speed / radius * dt -- forward = negative rotation about the axle
+	local steerAngle = -car.steer * 0.5
+	for name, w in pairs(car.wheels) do
+		local front = (name == "FL" or name == "FR")
+		local rot = CFrame.new()
+		if front then
+			rot = CFrame.Angles(0, steerAngle, 0)
+		end
+		w.weld.C0 = w.base * rot * CFrame.Angles(car.spin, 0, 0)
+	end
+
+	ui:SetSpeed(car.speed, car.def.MaxSpeed)
+	ui:SetMiles(serverMiles + (totalStuds - studsAtSync) * Config.StudToMile)
+
+	if cam then
+		local goal = 70 + 18 * math.clamp(math.abs(car.speed) / car.def.MaxSpeed, 0, 1)
+		fov = fov + (goal - fov) * math.min(1, dt * 3)
+		cam.FieldOfView = fov
+	end
+end)
+
+---------------------------------------------------------------- distance reporting
+task.spawn(function()
+	while true do
+		task.wait(1)
+		if car then
+			DistanceRemote:FireServer(totalStuds)
+		end
+	end
+end)
+
+---------------------------------------------------------------- go
+applyMusic()
+player:SetAttribute("EDClientReady", true)
+ReadyRemote:FireServer()
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX10"><Properties><string name="Name">World</string><ProtectedString name="Source"><![CDATA[-- World (ModuleScript, place in StarterPlayerScripts and name it "World")
+-- Client-side endless road + scenery generator with a floating origin.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+
+local WC = Config.World
+local ROAD_W = WC.RoadWidth
+local SEG_LEN = WC.SegmentLength
+
+local World = {}
+World.__index = World
+
+local CYL = Enum.PartType.Cylinder
+local BALL = Enum.PartType.Ball
+local VERT = CFrame.Angles(0, 0, math.pi / 2) -- turns a cylinder's axis (X) vertical
+
+local COLOR = {
+	grass = Color3.fromRGB(118, 198, 94),
+	asphalt = Color3.fromRGB(56, 60, 70),
+	dash = Color3.fromRGB(255, 208, 72),
+	edge = Color3.fromRGB(240, 242, 246),
+	trunk = Color3.fromRGB(126, 88, 58),
+	pine = Color3.fromRGB(46, 124, 92),
+	rock = Color3.fromRGB(150, 156, 170),
+	pole = Color3.fromRGB(72, 76, 90),
+	lamp = Color3.fromRGB(255, 236, 180),
+	cloud = Color3.fromRGB(255, 255, 255),
+	door = Color3.fromRGB(110, 80, 60),
+	window = Color3.fromRGB(255, 235, 160),
+}
+local LEAVES = {
+	Color3.fromRGB(102, 190, 84), Color3.fromRGB(88, 176, 92),
+	Color3.fromRGB(130, 204, 90), Color3.fromRGB(74, 160, 100),
+}
+local HOUSES = {
+	Color3.fromRGB(255, 214, 170), Color3.fromRGB(186, 226, 255), Color3.fromRGB(255, 190, 200),
+	Color3.fromRGB(204, 236, 190), Color3.fromRGB(240, 230, 255),
+}
+local ROOFS = { Color3.fromRGB(204, 84, 72), Color3.fromRGB(92, 110, 150), Color3.fromRGB(120, 86, 70) }
+local FLOWERS = {
+	Color3.fromRGB(255, 120, 150), Color3.fromRGB(255, 220, 90),
+	Color3.fromRGB(255, 255, 255), Color3.fromRGB(190, 130, 255),
+}
+
+local function pick(rng, list)
+	return list[rng:NextInteger(1, #list)]
+end
+
+local function P(parent, name, size, cf, color, opts)
+	opts = opts or {}
+	local p = Instance.new("Part")
+	p.Name = name
+	if opts.Shape then
+		p.Shape = opts.Shape
+	end
+	p.Size = size
+	p.CFrame = cf
+	p.Color = color
+	p.Material = opts.Material or Enum.Material.SmoothPlastic
+	p.Anchored = true
+	p.CanCollide = opts.Collide == true
+	p.CanQuery = opts.Collide == true
+	p.CanTouch = false
+	p.CastShadow = opts.Shadow ~= false
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	if opts.Transparency then
+		p.Transparency = opts.Transparency
+	end
+	p.Parent = parent
+	return p
+end
+
+---------------------------------------------------------------- scenery pieces
+local function tree(parent, rng, pos)
+	local h = rng:NextNumber(7, 11)
+	P(parent, "Trunk", Vector3.new(h, 2.2, 2.2), CFrame.new(pos + Vector3.new(0, h / 2, 0)) * VERT, COLOR.trunk, { Shape = CYL, Collide = true })
+	local d = rng:NextNumber(11, 16)
+	local color = pick(rng, LEAVES)
+	P(parent, "Leaves", Vector3.new(d, d, d), CFrame.new(pos + Vector3.new(0, h + d * 0.28, 0)), color, { Shape = BALL })
+	local d2 = d * 0.62
+	P(parent, "Leaves", Vector3.new(d2, d2, d2), CFrame.new(pos + Vector3.new(d * 0.32, h + d * 0.55, d * 0.1)), color, { Shape = BALL })
+end
+
+local function pine(parent, rng, pos)
+	local h = rng:NextNumber(5, 7)
+	P(parent, "Trunk", Vector3.new(h, 1.8, 1.8), CFrame.new(pos + Vector3.new(0, h / 2, 0)) * VERT, COLOR.trunk, { Shape = CYL, Collide = true })
+	local d = rng:NextNumber(12, 16)
+	local y = h - 1
+	for _ = 1, 3 do
+		P(parent, "Tier", Vector3.new(3.4, d, d), CFrame.new(pos + Vector3.new(0, y + 1.6, 0)) * VERT, COLOR.pine, { Shape = CYL })
+		y = y + 2.6
+		d = d * 0.72
+	end
+end
+
+local function bush(parent, rng, pos)
+	local d = rng:NextNumber(4, 7)
+	P(parent, "Bush", Vector3.new(d, d, d), CFrame.new(pos + Vector3.new(0, d * 0.35, 0)), pick(rng, LEAVES), { Shape = BALL })
+end
+
+local function rock(parent, rng, pos)
+	local sx, sy, sz = rng:NextNumber(4, 9), rng:NextNumber(3, 6), rng:NextNumber(4, 9)
+	local cf = CFrame.new(pos + Vector3.new(0, sy * 0.3, 0))
+		* CFrame.Angles(rng:NextNumber(-0.3, 0.3), rng:NextNumber(0, 6.28), rng:NextNumber(-0.3, 0.3))
+	P(parent, "Rock", Vector3.new(sx, sy, sz), cf, COLOR.rock, { Collide = true, Material = Enum.Material.Slate })
+end
+
+local function flowers(parent, rng, pos)
+	for _ = 1, 7 do
+		local d = rng:NextNumber(0.9, 1.5)
+		local off = Vector3.new(rng:NextNumber(-4, 4), 0.5, rng:NextNumber(-4, 4))
+		P(parent, "Flower", Vector3.new(d, d, d), CFrame.new(pos + off), pick(rng, FLOWERS), { Shape = BALL, Shadow = false })
+	end
+end
+
+local function house(parent, rng, pos, roadPos)
+	local hf = CFrame.lookAt(pos + Vector3.new(0, 4, 0), Vector3.new(roadPos.X, pos.Y + 4, roadPos.Z))
+	P(parent, "House", Vector3.new(14, 8, 12), hf, pick(rng, HOUSES), { Collide = true })
+	local roofColor = pick(rng, ROOFS)
+	P(parent, "Roof", Vector3.new(16, 1.2, 14), hf * CFrame.new(0, 4.6, 0), roofColor)
+	P(parent, "Roof", Vector3.new(11, 1.4, 8.5), hf * CFrame.new(0, 5.9, 0), roofColor)
+	P(parent, "Door", Vector3.new(2.4, 4.4, 0.3), hf * CFrame.new(0, -1.8, -6.1), COLOR.door)
+	P(parent, "Window", Vector3.new(2.2, 2.2, 0.3), hf * CFrame.new(-4, 0.8, -6.1), COLOR.window)
+	P(parent, "Window", Vector3.new(2.2, 2.2, 0.3), hf * CFrame.new(4, 0.8, -6.1), COLOR.window)
+end
+
+local function lamp(parent, pos)
+	P(parent, "Pole", Vector3.new(14, 0.8, 0.8), CFrame.new(pos + Vector3.new(0, 7, 0)) * VERT, COLOR.pole, { Shape = CYL, Collide = true })
+	P(parent, "Lamp", Vector3.new(2.4, 2.4, 2.4), CFrame.new(pos + Vector3.new(0, 14.4, 0)), COLOR.lamp, { Shape = BALL, Material = Enum.Material.Neon, Shadow = false })
+end
+
+local function cloud(parent, rng, base)
+	for _ = 1, rng:NextInteger(3, 5) do
+		local d = rng:NextNumber(40, 80)
+		local off = Vector3.new(rng:NextNumber(-50, 50), rng:NextNumber(-8, 8), rng:NextNumber(-40, 40))
+		P(parent, "Cloud", Vector3.new(d, d, d), CFrame.new(base + off), COLOR.cloud, { Shape = BALL, Shadow = false, Transparency = 0.05 })
+	end
+end
+
+---------------------------------------------------------------- world
+function World.new()
+	local self = setmetatable({}, World)
+	self.model = Instance.new("Model")
+	self.model.Name = "EndlessWorld"
+	self.model.WorldPivot = CFrame.new()
+	self.segments = {}
+	self.nextIndex = 1
+	self.oldestIndex = 1
+	self.currentIndex = 1
+	self.turn = 0
+	self.seed = os.time() % 100000
+	return self
+end
+
+function World:Init(startPos, yaw)
+	local startCF = CFrame.new(startPos.X, 0, startPos.Z) * CFrame.Angles(0, yaw, 0)
+	self.tailCF = startCF * CFrame.new(0, 0, SEG_LEN * 2) -- two segments behind the car
+	self.model.Parent = Workspace
+	self:_buildGround(startPos)
+	for _ = 1, WC.SegmentsAhead + 2 do
+		self:_buildSegment()
+	end
+	self.currentIndex = 2
+end
+
+function World:_buildGround(pos)
+	self.ground = P(self.model, "Ground", Vector3.new(2048, 4, 2048), CFrame.new(pos.X, -2, pos.Z), COLOR.grass, { Collide = true, Shadow = false })
+	self.hills = {}
+	local rng = Random.new(self.seed)
+	local n = 16
+	for i = 1, n do
+		local a = (i / n) * math.pi * 2 + rng:NextNumber(-0.1, 0.1)
+		local r = rng:NextNumber(820, 940)
+		local d = rng:NextNumber(300, 560)
+		local off = Vector3.new(math.cos(a) * r, -d * 0.25, math.sin(a) * r)
+		local g = rng:NextNumber(-12, 12)
+		local color = Color3.fromRGB(math.floor(98 + g), math.floor(172 + g), math.floor(104 + g))
+		local hill = P(self.model, "Hill", Vector3.new(d, d, d), CFrame.new(pos.X + off.X, off.Y, pos.Z + off.Z), color, { Shape = BALL, Shadow = false })
+		table.insert(self.hills, { part = hill, off = off })
+	end
+end
+
+function World:_recenter(pos)
+	local nx = math.floor(pos.X / 128 + 0.5) * 128
+	local nz = math.floor(pos.Z / 128 + 0.5) * 128
+	self.ground.CFrame = CFrame.new(nx, -2, nz)
+	for _, h in ipairs(self.hills) do
+		h.part.CFrame = CFrame.new(nx + h.off.X, h.off.Y, nz + h.off.Z)
+	end
+end
+
+function World:_decorate(model, center, index, rng)
+	local c = center.Position
+	for _, side in ipairs({ -1, 1 }) do
+		for _ = 1, rng:NextInteger(2, 4) do
+			local d = rng:NextNumber(27, 130)
+			local z = rng:NextNumber(-SEG_LEN / 2, SEG_LEN / 2)
+			local pos = (center * CFrame.new(side * d, 0, z)).Position
+			local roll = rng:NextNumber()
+			if roll < 0.32 then
+				tree(model, rng, pos)
+			elseif roll < 0.55 then
+				pine(model, rng, pos)
+			elseif roll < 0.68 then
+				bush(model, rng, pos)
+			elseif roll < 0.78 then
+				rock(model, rng, pos)
+			elseif roll < 0.88 then
+				flowers(model, rng, pos)
+			elseif d > 45 then
+				house(model, rng, pos, c)
+			else
+				bush(model, rng, pos)
+			end
+		end
+	end
+	if index % 2 == 0 then
+		lamp(model, (center * CFrame.new(ROAD_W / 2 + 3, 0, 0)).Position)
+	end
+	if rng:NextNumber() < 0.5 then
+		cloud(model, rng, (center * CFrame.new(rng:NextNumber(-500, 500), rng:NextNumber(240, 380), rng:NextNumber(-30, 30))).Position)
+	end
+end
+
+function World:_buildSegment()
+	local index = self.nextIndex
+	self.nextIndex = index + 1
+	local rng = Random.new(self.seed + index * 7919)
+
+	local startCF = self.tailCF
+	local endCF = startCF * CFrame.new(0, 0, -SEG_LEN)
+	local center = startCF * CFrame.new(0, 0, -SEG_LEN / 2)
+
+	local model = Instance.new("Model")
+	model.Name = "Seg" .. index
+
+	P(model, "Road", Vector3.new(ROAD_W, 0.2, SEG_LEN + 0.3), center, COLOR.asphalt, { Shadow = false })
+	-- round joint hides the wedge gap on curves
+	P(model, "Joint", Vector3.new(0.21, ROAD_W, ROAD_W), endCF * CFrame.Angles(0, 0, math.pi / 2), COLOR.asphalt, { Shape = CYL, Shadow = false })
+	for k = -1, 1 do
+		P(model, "Dash", Vector3.new(0.7, 0.04, 14), center * CFrame.new(0, 0.12, k * 20), COLOR.dash, { Shadow = false })
+	end
+	for _, side in ipairs({ -1, 1 }) do
+		P(model, "Edge", Vector3.new(0.6, 0.04, SEG_LEN), center * CFrame.new(side * (ROAD_W / 2 - 1.6), 0.12, 0), COLOR.edge, { Shadow = false })
+	end
+
+	self:_decorate(model, center, index, rng)
+	model.Parent = self.model
+
+	self.segments[index] = {
+		model = model,
+		startPos = startCF.Position,
+		endPos = endCF.Position,
+		center = center.Position,
+	}
+
+	-- gentle random curvature (first few segments are straight)
+	if index > 6 then
+		self.turn = math.clamp(self.turn * 0.97 + (rng:NextNumber() - 0.5) * 0.07, -WC.MaxTurn, WC.MaxTurn)
+	end
+	self.tailCF = endCF * CFrame.Angles(0, self.turn, 0)
+end
+
+function World:Update(carPos)
+	local segs = self.segments
+	local best, bestD = self.currentIndex, math.huge
+	for i = self.currentIndex - 2, self.currentIndex + 4 do
+		local s = segs[i]
+		if s then
+			local dx, dz = carPos.X - s.center.X, carPos.Z - s.center.Z
+			local d = dx * dx + dz * dz
+			if d < bestD then
+				best, bestD = i, d
+			end
+		end
+	end
+	self.currentIndex = best
+
+	local built = 0
+	while self.nextIndex <= best + WC.SegmentsAhead and built < 3 do
+		self:_buildSegment()
+		built = built + 1
+	end
+	while self.oldestIndex < best - WC.SegmentsBehind do
+		local s = segs[self.oldestIndex]
+		if s then
+			s.model:Destroy()
+			segs[self.oldestIndex] = nil
+		end
+		self.oldestIndex = self.oldestIndex + 1
+	end
+
+	local g = self.ground.Position
+	local dx, dz = carPos.X - g.X, carPos.Z - g.Z
+	if dx * dx + dz * dz > 300 * 300 then
+		self:_recenter(carPos)
+	end
+end
+
+-- Point on the road centerline `lookahead` studs ahead of the car (for autodrive).
+function World:GetTarget(carPos, lookahead)
+	local s = self.segments[self.currentIndex]
+	if not s then
+		return nil
+	end
+	local dir = s.endPos - s.startPos
+	local u = dir.Unit
+	local along = (carPos - s.startPos):Dot(u)
+	local d = along + lookahead
+	local i = self.currentIndex
+	while d > SEG_LEN and self.segments[i + 1] do
+		d = d - SEG_LEN
+		i = i + 1
+	end
+	local seg = self.segments[i]
+	if not seg then
+		return nil
+	end
+	return seg.startPos:Lerp(seg.endPos, math.clamp(d / SEG_LEN, 0, 1))
+end
+
+-- Floating origin: move the whole world by -offset (caller moves the car too).
+function World:Shift(offset)
+	self.model:PivotTo(self.model:GetPivot() - offset)
+	for _, s in pairs(self.segments) do
+		s.startPos = s.startPos - offset
+		s.endPos = s.endPos - offset
+		s.center = s.center - offset
+	end
+	self.tailCF = self.tailCF - offset
+end
+
+function World:Destroy()
+	self.model:Destroy()
+end
+
+return World
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX11"><Properties><string name="Name">UI</string><ProtectedString name="Source"><![CDATA[-- UI (ModuleScript, place in StarterPlayerScripts and name it "UI")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local CarBuilder = require(ReplicatedStorage:WaitForChild("CarBuilder"))
+
+local UI = {}
+UI.__index = UI
+
+local C = {
+	panel = Color3.fromRGB(17, 21, 30),
+	panel2 = Color3.fromRGB(28, 34, 46),
+	hover = Color3.fromRGB(44, 52, 70),
+	track = Color3.fromRGB(46, 54, 70),
+	text = Color3.fromRGB(240, 244, 250),
+	sub = Color3.fromRGB(150, 160, 178),
+	accent = Color3.fromRGB(94, 234, 212),
+	accentHover = Color3.fromRGB(130, 245, 226),
+	accentDark = Color3.fromRGB(10, 32, 32),
+	warn = Color3.fromRGB(251, 146, 60),
+}
+
+---------------------------------------------------------------- helpers
+local function tween(inst, duration, props)
+	TweenService:Create(inst, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
+end
+
+local function corner(inst, radius)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, radius)
+	c.Parent = inst
+	return c
+end
+
+local function outline(inst, transparency, color)
+	local s = Instance.new("UIStroke")
+	s.Color = color or Color3.new(1, 1, 1)
+	s.Transparency = transparency or 0.9
+	s.Thickness = 1
+	s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	s.Parent = inst
+	return s
+end
+
+local function box(parent, size, pos, color, transparency)
+	local f = Instance.new("Frame")
+	f.Size = size
+	f.Position = pos or UDim2.new()
+	f.BackgroundColor3 = color or C.panel
+	f.BackgroundTransparency = transparency or 0
+	f.BorderSizePixel = 0
+	f.Parent = parent
+	return f
+end
+
+local function label(parent, str, size, pos, props)
+	local l = Instance.new("TextLabel")
+	l.BackgroundTransparency = 1
+	l.Size = size
+	l.Position = pos or UDim2.new()
+	l.Text = str
+	l.Font = Enum.Font.GothamMedium
+	l.TextSize = 14
+	l.TextColor3 = C.text
+	l.TextXAlignment = Enum.TextXAlignment.Left
+	l.Parent = parent
+	if props then
+		for k, v in pairs(props) do
+			l[k] = v
+		end
+	end
+	return l
+end
+
+local function setButtonStyle(b, base, hover, textColor)
+	b:SetAttribute("Base", base)
+	b:SetAttribute("Hover", hover)
+	b.BackgroundColor3 = base
+	b.TextColor3 = textColor
+end
+
+local function button(parent, str, size, pos, kind)
+	local b = Instance.new("TextButton")
+	b.AutoButtonColor = false
+	b.Size = size
+	b.Position = pos or UDim2.new()
+	b.Text = str
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 13
+	b.BorderSizePixel = 0
+	b.Parent = parent
+	corner(b, 8)
+	if kind == "accent" then
+		setButtonStyle(b, C.accent, C.accentHover, C.accentDark)
+	else
+		setButtonStyle(b, C.panel2, C.hover, C.text)
+	end
+	b.MouseEnter:Connect(function()
+		tween(b, 0.12, { BackgroundColor3 = b:GetAttribute("Hover") })
+	end)
+	b.MouseLeave:Connect(function()
+		tween(b, 0.12, { BackgroundColor3 = b:GetAttribute("Base") })
+	end)
+	return b
+end
+
+local function bindScale(scaleObj, refX, refY, minS, maxS, onChange)
+	local cam = Workspace.CurrentCamera or Workspace:WaitForChild("Camera")
+	local function update()
+		local vp = cam.ViewportSize
+		local s = math.clamp(math.min(vp.X / refX, vp.Y / refY), minS, maxS)
+		scaleObj.Scale = s
+		if onChange then
+			onChange(s)
+		end
+	end
+	update()
+	cam:GetPropertyChangedSignal("ViewportSize"):Connect(update)
+end
+
+local function fmtMiles(m)
+	if m >= 100 then
+		return string.format("%.0f", m)
+	end
+	return string.format("%.1f", m)
+end
+
+---------------------------------------------------------------- modal
+local function createModal(gui, width, height)
+	local overlay = Instance.new("TextButton")
+	overlay.Name = "Overlay"
+	overlay.Size = UDim2.fromScale(1, 1)
+	overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+	overlay.BackgroundTransparency = 1
+	overlay.AutoButtonColor = false
+	overlay.Text = ""
+	overlay.Visible = false
+	overlay.ZIndex = 5
+	overlay.Parent = gui
+
+	local panel = Instance.new("Frame")
+	panel.AnchorPoint = Vector2.new(0.5, 0.5)
+	panel.Size = UDim2.fromOffset(width, height)
+	panel.Position = UDim2.new(0.5, 0, 0.5, 16)
+	panel.BackgroundColor3 = C.panel
+	panel.BackgroundTransparency = 0.04
+	panel.BorderSizePixel = 0
+	panel.Active = true
+	panel.ZIndex = 6
+	panel.Parent = overlay
+	corner(panel, 16)
+	outline(panel, 0.88)
+	local scale = Instance.new("UIScale")
+	scale.Parent = panel
+	bindScale(scale, width + 40, height + 70, 0.55, 1)
+
+	local modal = { overlay = overlay, panel = panel }
+
+	function modal.open()
+		overlay.Visible = true
+		panel.Position = UDim2.new(0.5, 0, 0.5, 16)
+		tween(overlay, 0.2, { BackgroundTransparency = 0.5 })
+		tween(panel, 0.22, { Position = UDim2.fromScale(0.5, 0.5) })
+		if modal.onOpen then
+			modal.onOpen()
+		end
+	end
+
+	function modal.close()
+		if not overlay.Visible then
+			return
+		end
+		tween(overlay, 0.15, { BackgroundTransparency = 1 })
+		tween(panel, 0.15, { Position = UDim2.new(0.5, 0, 0.5, 16) })
+		task.delay(0.16, function()
+			if overlay.BackgroundTransparency >= 0.99 then
+				overlay.Visible = false
+			end
+		end)
+		if modal.onClose then
+			modal.onClose()
+		end
+	end
+
+	function modal.toggle()
+		if overlay.Visible and overlay.BackgroundTransparency < 0.99 then
+			modal.close()
+		else
+			modal.open()
+		end
+	end
+
+	overlay.Activated:Connect(modal.close)
+	return modal
+end
+
+local function modalHeader(modal, title, subtitle, width)
+	label(modal.panel, title, UDim2.fromOffset(300, 26), UDim2.fromOffset(20, 14), { Font = Enum.Font.GothamBold, TextSize = 20, ZIndex = 7 })
+	if subtitle then
+		label(modal.panel, subtitle, UDim2.fromOffset(380, 16), UDim2.fromOffset(20, 42), { TextSize = 12, TextColor3 = C.sub, ZIndex = 7 })
+	end
+	local close = button(modal.panel, "X", UDim2.fromOffset(28, 28), UDim2.fromOffset(width - 20 - 28, 14))
+	close.ZIndex = 7
+	close.Activated:Connect(modal.close)
+end
+
+---------------------------------------------------------------- widgets
+local function createToggle(parent, onChanged)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.fromOffset(42, 24)
+	btn.AnchorPoint = Vector2.new(1, 0.5)
+	btn.Position = UDim2.new(1, -20, 0.5, 0)
+	btn.Text = ""
+	btn.AutoButtonColor = false
+	btn.BackgroundColor3 = C.track
+	btn.BorderSizePixel = 0
+	btn.ZIndex = 7
+	btn.Parent = parent
+	corner(btn, 12)
+
+	local knob = box(btn, UDim2.fromOffset(18, 18), UDim2.fromOffset(3, 3), Color3.new(1, 1, 1))
+	knob.ZIndex = 8
+	corner(knob, 9)
+
+	local state = false
+	local function apply(v, animate)
+		state = v
+		local bg = C.track
+		local pos = UDim2.fromOffset(3, 3)
+		if v then
+			bg = C.accent
+			pos = UDim2.fromOffset(21, 3)
+		end
+		if animate then
+			tween(btn, 0.15, { BackgroundColor3 = bg })
+			tween(knob, 0.15, { Position = pos })
+		else
+			btn.BackgroundColor3 = bg
+			knob.Position = pos
+		end
+	end
+	btn.Activated:Connect(function()
+		apply(not state, true)
+		if onChanged then
+			onChanged(state)
+		end
+	end)
+	return {
+		Set = function(v)
+			apply(v, false)
+		end,
+	}
+end
+
+local function createSlider(parent, onChanged)
+	local track = box(parent, UDim2.fromOffset(120, 6), UDim2.new(1, -20, 0.5, 0), C.track)
+	track.AnchorPoint = Vector2.new(1, 0.5)
+	track.ZIndex = 7
+	corner(track, 3)
+	local fill = box(track, UDim2.fromScale(0.5, 1), nil, C.accent)
+	fill.ZIndex = 8
+	corner(fill, 3)
+	local knob = box(track, UDim2.fromOffset(14, 14), UDim2.fromScale(0.5, 0.5), Color3.new(1, 1, 1))
+	knob.AnchorPoint = Vector2.new(0.5, 0.5)
+	knob.ZIndex = 9
+	corner(knob, 7)
+
+	local hit = Instance.new("TextButton")
+	hit.Text = ""
+	hit.BackgroundTransparency = 1
+	hit.AnchorPoint = Vector2.new(0.5, 0.5)
+	hit.Position = UDim2.fromScale(0.5, 0.5)
+	hit.Size = UDim2.new(1, 20, 0, 28)
+	hit.ZIndex = 10
+	hit.Parent = track
+
+	local function setValue(v)
+		fill.Size = UDim2.fromScale(v, 1)
+		knob.Position = UDim2.fromScale(v, 0.5)
+	end
+	local dragging = false
+	local function fromX(x)
+		local rel = math.clamp((x - track.AbsolutePosition.X) / math.max(track.AbsoluteSize.X, 1), 0, 1)
+		setValue(rel)
+		if onChanged then
+			onChanged(rel)
+		end
+	end
+	hit.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			fromX(input.Position.X)
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			fromX(input.Position.X)
+		end
+	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+	return {
+		Set = setValue,
+	}
+end
+
+local function createSegmented(parent, options, onChanged)
+	local holder = box(parent, UDim2.fromOffset(104, 26), UDim2.new(1, -20, 0.5, 0), C.track)
+	holder.AnchorPoint = Vector2.new(1, 0.5)
+	holder.ZIndex = 7
+	corner(holder, 8)
+	local buttons = {}
+	local function apply(value)
+		for v, b in pairs(buttons) do
+			if v == value then
+				b.BackgroundColor3 = C.accent
+				b.TextColor3 = C.accentDark
+			else
+				b.BackgroundColor3 = C.track
+				b.TextColor3 = C.sub
+			end
+		end
+	end
+	for i, opt in ipairs(options) do
+		local b = Instance.new("TextButton")
+		b.Size = UDim2.fromOffset(50, 22)
+		b.Position = UDim2.fromOffset(2 + (i - 1) * 50, 2)
+		b.Text = opt.label
+		b.Font = Enum.Font.GothamBold
+		b.TextSize = 11
+		b.AutoButtonColor = false
+		b.BorderSizePixel = 0
+		b.ZIndex = 8
+		b.Parent = holder
+		corner(b, 6)
+		buttons[opt.value] = b
+		b.Activated:Connect(function()
+			apply(opt.value)
+			if onChanged then
+				onChanged(opt.value)
+			end
+		end)
+	end
+	return { Set = apply }
+end
+
+local function statBar(parent, y, title, frac)
+	label(parent, title, UDim2.fromOffset(60, 10), UDim2.fromOffset(10, y), { TextSize = 9, Font = Enum.Font.GothamBold, TextColor3 = C.sub, ZIndex = 7 })
+	local track = box(parent, UDim2.fromOffset(82, 4), UDim2.fromOffset(10, y + 12), C.track)
+	track.ZIndex = 7
+	corner(track, 2)
+	local fill = box(track, UDim2.fromScale(math.clamp(frac, 0, 1), 1), nil, C.accent)
+	fill.ZIndex = 8
+	corner(fill, 2)
+end
+
+---------------------------------------------------------------- UI
+function UI.new(callbacks)
+	local self = setmetatable({}, UI)
+	self.callbacks = callbacks or {}
+	self.settings = table.clone(Config.Defaults)
+	self.serverMiles = 0
+	self.selected = Config.Cars[1].Id
+	self.cards = {}
+	self.previews = {}
+	self._lastSpeedText = ""
+	self._lastMilesText = ""
+	self._toastToken = 0
+
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "EndlessDrivingUI"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = false
+	gui.DisplayOrder = 10
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+	self.gui = gui
+
+	---------------------------------------------------- HUD
+	local hud = Instance.new("Frame")
+	hud.Name = "HUD"
+	hud.BackgroundTransparency = 1
+	hud.Size = UDim2.fromScale(1, 1)
+	hud.Parent = gui
+	local hudScale = Instance.new("UIScale")
+	hudScale.Parent = hud
+	bindScale(hudScale, 900, 520, 0.7, 1.15, function(s)
+		hud.Size = UDim2.fromScale(1 / s, 1 / s)
+	end)
+
+	-- miles card (top-left)
+	local milesCard = box(hud, UDim2.fromOffset(150, 54), UDim2.fromOffset(16, 12), C.panel, 0.18)
+	corner(milesCard, 12)
+	outline(milesCard, 0.9)
+	label(milesCard, "MILES DRIVEN", UDim2.fromOffset(120, 12), UDim2.fromOffset(14, 8), { TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = C.sub })
+	self.milesLabel = label(milesCard, "0.00", UDim2.fromOffset(130, 28), UDim2.fromOffset(14, 20), { TextSize = 24, Font = Enum.Font.GothamBold, RichText = true })
+
+	-- buttons (top-right)
+	local bar = Instance.new("Frame")
+	bar.BackgroundTransparency = 1
+	bar.AnchorPoint = Vector2.new(1, 0)
+	bar.Position = UDim2.new(1, -16, 0, 12)
+	bar.Size = UDim2.fromOffset(200, 32)
+	bar.Parent = hud
+	local list = Instance.new("UIListLayout")
+	list.FillDirection = Enum.FillDirection.Horizontal
+	list.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	list.Padding = UDim.new(0, 8)
+	list.Parent = bar
+	local carsBtn = button(bar, "Change Car", UDim2.fromOffset(100, 32), nil, "ghost")
+	carsBtn.LayoutOrder = 1
+	local settingsBtn = button(bar, "Settings", UDim2.fromOffset(84, 32), nil, "ghost")
+	settingsBtn.LayoutOrder = 2
+	for _, b in ipairs({ carsBtn, settingsBtn }) do
+		b.BackgroundTransparency = 0.12
+		outline(b, 0.9)
+	end
+
+	-- speed card (bottom-center)
+	local speedCard = box(hud, UDim2.fromOffset(170, 62), UDim2.new(0.5, 0, 1, -20), C.panel, 0.18)
+	speedCard.AnchorPoint = Vector2.new(0.5, 1)
+	corner(speedCard, 14)
+	outline(speedCard, 0.9)
+	self.speedLabel = label(speedCard, "0", UDim2.new(1, 0, 0, 36), UDim2.fromOffset(0, 6), {
+		TextSize = 30, Font = Enum.Font.GothamBlack, TextXAlignment = Enum.TextXAlignment.Center, RichText = true,
+	})
+	local speedTrack = box(speedCard, UDim2.fromOffset(138, 4), UDim2.fromOffset(16, 47), C.track)
+	corner(speedTrack, 2)
+	self.speedFill = box(speedTrack, UDim2.fromScale(0, 1), nil, C.accent)
+	corner(self.speedFill, 2)
+
+	-- autodrive chip
+	local chip = Instance.new("TextButton")
+	chip.AutoButtonColor = false
+	chip.AnchorPoint = Vector2.new(0.5, 1)
+	chip.Position = UDim2.new(0.5, 0, 1, -90)
+	chip.Size = UDim2.fromOffset(104, 22)
+	chip.BackgroundColor3 = C.accentDark
+	chip.BackgroundTransparency = 0.1
+	chip.Text = "AUTODRIVE ON"
+	chip.Font = Enum.Font.GothamBold
+	chip.TextSize = 10
+	chip.TextColor3 = C.accent
+	chip.BorderSizePixel = 0
+	chip.Visible = false
+	chip.Parent = hud
+	corner(chip, 11)
+	outline(chip, 0.4, C.accent)
+	self.chip = chip
+	chip.Activated:Connect(function()
+		self:_setSetting("AutoDrive", false)
+	end)
+
+	-- toast
+	local toast = box(hud, UDim2.fromOffset(320, 36), UDim2.new(0.5, 0, 0, -50), C.panel, 0.08)
+	toast.AnchorPoint = Vector2.new(0.5, 0)
+	corner(toast, 18)
+	outline(toast, 0.5, C.accent)
+	self.toastLabel = label(toast, "", UDim2.fromScale(1, 1), nil, {
+		TextSize = 13, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center,
+	})
+	self.toast = toast
+
+	---------------------------------------------------- Cars modal
+	local carsModal = createModal(gui, 592, 340)
+	modalHeader(carsModal, "Choose your car", "Drive more miles to unlock new cars", 592)
+	local cardList = Instance.new("Frame")
+	cardList.BackgroundTransparency = 1
+	cardList.Position = UDim2.fromOffset(20, 76)
+	cardList.Size = UDim2.fromOffset(552, 244)
+	cardList.ZIndex = 7
+	cardList.Parent = carsModal.panel
+	local cardLayout = Instance.new("UIListLayout")
+	cardLayout.FillDirection = Enum.FillDirection.Horizontal
+	cardLayout.Padding = UDim.new(0, 10)
+	cardLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	cardLayout.Parent = cardList
+
+	for i, def in ipairs(Config.Cars) do
+		local card = box(cardList, UDim2.fromOffset(102, 244), nil, C.panel2)
+		card.LayoutOrder = i
+		card.ZIndex = 7
+		corner(card, 12)
+		outline(card, 0.92)
+
+		local vp = Instance.new("ViewportFrame")
+		vp.Size = UDim2.fromOffset(94, 86)
+		vp.Position = UDim2.fromOffset(4, 4)
+		vp.BackgroundTransparency = 1
+		vp.Ambient = Color3.fromRGB(170, 175, 190)
+		vp.LightColor = Color3.fromRGB(255, 244, 225)
+		vp.LightDirection = Vector3.new(-0.6, -1, -0.4)
+		vp.ZIndex = 8
+		vp.Parent = card
+		local model = CarBuilder.Build(def)
+		model.Parent = vp
+		local cam = Instance.new("Camera")
+		cam.FieldOfView = 34
+		cam.Parent = vp
+		vp.CurrentCamera = cam
+		table.insert(self.previews, { cam = cam, vp = vp })
+
+		label(card, def.Name, UDim2.fromOffset(86, 18), UDim2.fromOffset(8, 94), {
+			Font = Enum.Font.GothamBold, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 8,
+		})
+		local top = label(card, "", UDim2.fromOffset(86, 14), UDim2.fromOffset(8, 113), {
+			TextSize = 11, TextColor3 = C.sub, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 8,
+		})
+		statBar(card, 134, "SPEED", def.MaxSpeed / 250)
+		statBar(card, 158, "ACCEL", def.Accel / 74)
+
+		local lockLabel = label(card, "", UDim2.fromOffset(86, 12), UDim2.fromOffset(8, 182), {
+			TextSize = 10, Font = Enum.Font.GothamBold, TextColor3 = C.warn, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 8,
+		})
+		local lockTrack = box(card, UDim2.fromOffset(82, 4), UDim2.fromOffset(10, 198), C.track)
+		lockTrack.ZIndex = 8
+		corner(lockTrack, 2)
+		local lockFill = box(lockTrack, UDim2.fromScale(0, 1), nil, C.warn)
+		lockFill.ZIndex = 9
+		corner(lockFill, 2)
+
+		local btn = button(card, "SELECT", UDim2.fromOffset(88, 24), UDim2.fromOffset(7, 212), "accent")
+		btn.ZIndex = 8
+		btn.TextSize = 11
+		btn.Activated:Connect(function()
+			local unlocked = self.serverMiles >= def.Unlock
+			if unlocked and self.selected ~= def.Id and self.callbacks.SelectCar then
+				self.callbacks.SelectCar(def.Id)
+			end
+		end)
+
+		self.cards[i] = { def = def, vp = vp, top = top, lockLabel = lockLabel, lockTrack = lockTrack, lockFill = lockFill, btn = btn }
+	end
+
+	local angle = 0
+	local previewConn
+	carsModal.onOpen = function()
+		self:_refreshCars()
+		if previewConn then
+			previewConn:Disconnect()
+		end
+		previewConn = RunService.RenderStepped:Connect(function(dt)
+			angle = angle + dt * 0.7
+			local center = Vector3.new(0, 2.8, 0)
+			for _, pv in ipairs(self.previews) do
+				pv.cam.CFrame = CFrame.lookAt(center + Vector3.new(math.sin(angle) * 40, 9, math.cos(angle) * 40), center)
+			end
+		end)
+	end
+	carsModal.onClose = function()
+		if previewConn then
+			previewConn:Disconnect()
+			previewConn = nil
+		end
+	end
+	self.carsModal = carsModal
+	carsBtn.Activated:Connect(carsModal.toggle)
+
+	---------------------------------------------------- Settings modal
+	local settingsModal = createModal(gui, 330, 292)
+	modalHeader(settingsModal, "Settings", nil, 330)
+
+	local function row(y, title, subtitle)
+		local r = Instance.new("Frame")
+		r.BackgroundTransparency = 1
+		r.Position = UDim2.fromOffset(0, y)
+		r.Size = UDim2.fromOffset(330, 46)
+		r.ZIndex = 7
+		r.Parent = settingsModal.panel
+		label(r, title, UDim2.fromOffset(170, 18), UDim2.fromOffset(20, subtitle and 6 or 14), { Font = Enum.Font.GothamBold, TextSize = 14, ZIndex = 7 })
+		if subtitle then
+			label(r, subtitle, UDim2.fromOffset(170, 14), UDim2.fromOffset(20, 25), { TextSize = 11, TextColor3 = C.sub, ZIndex = 7 })
+		end
+		return r
+	end
+
+	self.controls = {}
+	self.controls.Music = createToggle(row(58, "Background music", "Chill road-trip tracks"), function(v)
+		self:_setSetting("Music", v)
+	end)
+	self.controls.Volume = createSlider(row(106, "Music volume"), function(v)
+		self:_setSetting("Volume", v)
+	end)
+	self.controls.AutoDrive = createToggle(row(154, "Autodrive", "The car drives itself (T)"), function(v)
+		self:_setSetting("AutoDrive", v)
+	end)
+	self.controls.Units = createSegmented(row(202, "Speed units"), {
+		{ label = "MPH", value = "mph" },
+		{ label = "KM/H", value = "kph" },
+	}, function(v)
+		self:_setSetting("Units", v)
+	end)
+	self.musicInfo = label(settingsModal.panel, "", UDim2.fromOffset(290, 28), UDim2.fromOffset(20, 254), {
+		TextSize = 11, TextColor3 = C.sub, TextWrapped = true, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 7,
+	})
+	self.settingsModal = settingsModal
+	settingsBtn.Activated:Connect(settingsModal.toggle)
+
+	self:SetSettings(self.settings)
+	return self
+end
+
+---------------------------------------------------------------- settings
+function UI:_setSetting(key, value)
+	self.settings[key] = value
+	self:_applySettingsToControls()
+	if self.callbacks.SettingChanged then
+		self.callbacks.SettingChanged(key, value, self.settings)
+	end
+end
+
+function UI:_applySettingsToControls()
+	local s = self.settings
+	self.controls.Music.Set(s.Music)
+	self.controls.Volume.Set(s.Volume)
+	self.controls.AutoDrive.Set(s.AutoDrive)
+	self.controls.Units.Set(s.Units)
+	self.chip.Visible = s.AutoDrive
+	self._lastSpeedText = ""
+	if self.carsModal and self.cards[1] then
+		self:_refreshCars()
+	end
+end
+
+function UI:SetSettings(s)
+	for k, v in pairs(s) do
+		self.settings[k] = v
+	end
+	self:_applySettingsToControls()
+end
+
+function UI:SetMusicInfo(text)
+	self.musicInfo.Text = text
+end
+
+---------------------------------------------------------------- HUD updates
+function UI:SetMiles(miles)
+	local text = string.format('%.2f <font size="13" color="rgb(150,160,178)">mi</font>', miles)
+	if text ~= self._lastMilesText then
+		self._lastMilesText = text
+		self.milesLabel.Text = text
+	end
+end
+
+function UI:SetSpeed(studsPerSec, maxSpeed)
+	local mult = Config.StudToMph
+	local unit = "MPH"
+	if self.settings.Units == "kph" then
+		mult = Config.StudToKph
+		unit = "KM/H"
+	end
+	local v = math.floor(math.abs(studsPerSec) * mult + 0.5)
+	local text = string.format('%d <font size="12" color="rgb(150,160,178)">%s</font>', v, unit)
+	if text ~= self._lastSpeedText then
+		self._lastSpeedText = text
+		self.speedLabel.Text = text
+	end
+	local frac = math.clamp(math.abs(studsPerSec) / math.max(maxSpeed, 1), 0, 1)
+	self.speedFill.Size = UDim2.fromScale(frac, 1)
+	self.speedFill.BackgroundColor3 = C.accent:Lerp(C.warn, frac * frac)
+end
+
+function UI:Toast(message)
+	self._toastToken = self._toastToken + 1
+	local token = self._toastToken
+	self.toastLabel.Text = message
+	tween(self.toast, 0.3, { Position = UDim2.new(0.5, 0, 0, 14) })
+	task.delay(3.2, function()
+		if token == self._toastToken then
+			tween(self.toast, 0.3, { Position = UDim2.new(0.5, 0, 0, -50) })
+		end
+	end)
+end
+
+---------------------------------------------------------------- cars
+function UI:SetStats(miles, selected)
+	local previous = self.serverMiles
+	self.serverMiles = miles
+	self.selected = selected
+	if self._statsInit then
+		for _, def in ipairs(Config.Cars) do
+			if def.Unlock > previous and miles >= def.Unlock then
+				self:Toast("Unlocked: " .. def.Name .. " - open Change Car")
+			end
+		end
+	end
+	self._statsInit = true
+	self:_refreshCars()
+end
+
+function UI:_refreshCars()
+	local mult = Config.StudToMph
+	local unit = "mph"
+	if self.settings.Units == "kph" then
+		mult = Config.StudToKph
+		unit = "km/h"
+	end
+	for _, c in ipairs(self.cards) do
+		local def = c.def
+		local unlocked = self.serverMiles >= def.Unlock
+		local isSelected = (def.Id == self.selected)
+		c.top.Text = string.format("%d %s top", math.floor(def.MaxSpeed * mult + 0.5), unit)
+		if unlocked then
+			c.vp.ImageColor3 = Color3.new(1, 1, 1)
+		else
+			c.vp.ImageColor3 = Color3.fromRGB(70, 74, 86)
+		end
+		c.lockLabel.Visible = not unlocked
+		c.lockTrack.Visible = not unlocked
+		if not unlocked then
+			c.lockLabel.Text = "Unlock at " .. fmtMiles(def.Unlock) .. " mi"
+			c.lockFill.Size = UDim2.fromScale(math.clamp(self.serverMiles / def.Unlock, 0, 1), 1)
+			c.btn.Text = "LOCKED"
+			setButtonStyle(c.btn, Color3.fromRGB(38, 42, 52), Color3.fromRGB(38, 42, 52), C.sub)
+		elseif isSelected then
+			c.btn.Text = "SELECTED"
+			setButtonStyle(c.btn, Color3.fromRGB(36, 46, 62), Color3.fromRGB(36, 46, 62), C.accent)
+		else
+			c.btn.Text = "SELECT"
+			setButtonStyle(c.btn, C.accent, C.accentHover, C.accentDark)
+		end
+	end
+end
+
+return UI
+]]></ProtectedString></Properties></Item></Item></Item></roblox>
